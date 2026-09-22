@@ -1,0 +1,11 @@
+# Template — do not track
+gentelella-master/
+# Deps & build
+node_modules/
+shs-evaluation-tool/node_modules/
+shs-evaluation-tool/dist/
+dist/
+# OS
+.DS_Store
+Thumbs.db
+*.log
