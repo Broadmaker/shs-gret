@@ -17,11 +17,17 @@ export function EvaluationAreaPage() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!area) return;
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable)) return;
       if (e.key >= "1" && e.key <= "4") {
         const v = Number(e.key) as 1|2|3|4;
         setRating(area.indicators[idx].id, v);
       } else if (e.key.toLowerCase() === "n") setIdx((i) => Math.min(area.indicators.length - 1, i + 1));
       else if (e.key.toLowerCase() === "p") setIdx((i) => Math.max(0, i - 1));
+      else if (e.key.toLowerCase() === "r") {
+        const el = document.getElementById(`remarks-${area.indicators[idx].id}`) as HTMLTextAreaElement | null;
+        if (el) { e.preventDefault(); el.focus(); }
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);

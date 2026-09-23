@@ -116,10 +116,11 @@ export function IndicatorCard({
             {localRemarks && <span style={{ marginLeft: "auto", fontSize: 10, color: "var(--text-muted)", fontWeight: 400 }}>{localRemarks.length} chars</span>}
           </label>
           <textarea
+            id={`remarks-${indicator.id}`}
             value={localRemarks}
             onChange={(e) => setLocalRemarks(e.target.value)}
             onBlur={(e) => { e.currentTarget.style.borderColor = "var(--border-color)"; e.currentTarget.style.boxShadow = "none"; if (localRemarks !== remarks) onRemarks(localRemarks); }}
-            placeholder="Add findings, gaps, or recommendations for this indicator..."
+            placeholder="Add findings, gaps, or recommendations for this indicator... (R to focus)"
             rows={3}
             style={{ marginTop: 6, width: "100%", border: "1px solid var(--border-color)", borderRadius: "var(--radius)", background: "var(--bg-surface)", padding: "10px 12px", fontSize: 13, outline: "none", resize: "vertical", lineHeight: 1.5 }}
             onFocus={(e) => { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.boxShadow = "0 0 0 3px var(--primary-lt)"; }}
