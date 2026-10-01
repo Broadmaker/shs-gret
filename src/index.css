@@ -1,5 +1,26 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'OldEnglish';
+  src: url('/fonts/OLDENGL.TTF') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Verdana';
+  src: url('/fonts/verdana.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Verdana';
+  src: url('/fonts/verdanab.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
 /* Gentelella v4 tokens — DNA: Dark sidebar #1a2332 · Teal #1ABB9C · Light #f5f7fb */
 :root {
   --sidebar-bg: #1a2332;
@@ -350,5 +371,32 @@ input:focus, select:focus, textarea:focus { border-color: var(--primary) !import
 @media print {
   .no-print, .sidebar, .topbar { display: none !important; }
   .main { margin-inline-start: 0; padding-top: 0; }
-  @page { size: A4; margin: 12mm; }
+  /* DepEd print letterhead — keep colors/icons exact like training management PDFs */
+  .print-sheet { box-shadow: none !important; border: none !important; }
+  .print-header, .print-footer { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  /* Fixed full-page sheet like the training management slip print: a DEFINITE
+     height is what makes the flex column + mt-auto footer pin to the bottom
+     in Chrome print — min-height alone does not. The bottom margin is wider
+     (12mm vs 8mm) so the last footer line clears rounding spill and printer
+     hardware unprintable zones. Sheet height = 297 − 8 − 12 = 277mm.
+     Content taller than the sheet is shrunk by the JS zoom-to-fit. */
+  .print-sheet { display: flex; flex-direction: column; height: 277mm; min-height: 277mm; max-height: 277mm; overflow: hidden; }
+  .print-footer { position: static; break-inside: avoid; }
+  /* Compact table cells so the one-page fit holds */
+  .print-sheet th, .print-sheet td { padding: 4px 6px !important; }
+}
+
+/* Paged-media page number — mirrors training management PDFs ("Page X of Y",
+   bottom-right of every page). Supported in Chrome/Edge 131+; safely ignored
+   elsewhere. Must live OUTSIDE @media print: margin at-rules are page-context,
+   not print-context, and some CSS toolchains drop nested @page rules. */
+@page {
+  size: A4;
+  margin: 8mm 8mm 12mm;
+  @bottom-right {
+    content: "Page " counter(page) " of " counter(pages);
+    font-family: "Verdana", sans-serif;
+    font-size: 8pt;
+    color: #8c8c8c;
+  }
 }

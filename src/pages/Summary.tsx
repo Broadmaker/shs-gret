@@ -71,8 +71,8 @@ export function SummaryPage() {
                 <li key={f.id} style={{ border: "1px solid var(--border-color)", borderRadius: "var(--radius)", padding: 12, display: "flex", justifyContent: "space-between", gap: 8 }}>
                   <div style={{ flex: 1 }}>
                     <p style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)" }}>Area {f.areaId}</p>
-                    <p style={{ fontSize: 13 }}><strong>Finding:</strong> {f.finding}</p>
-                    {f.recommendation && <p style={{ fontSize: 13, color: "var(--text-secondary)" }}><strong>Recommendation:</strong> {f.recommendation}</p>}
+                    <p style={{ fontSize: 13, whiteSpace: "pre-wrap", overflowWrap: "break-word" }}><strong>Finding:</strong> {f.finding}</p>
+                    {f.recommendation && <p style={{ fontSize: 13, color: "var(--text-secondary)", whiteSpace: "pre-wrap", overflowWrap: "break-word" }}><strong>Recommendation:</strong> {f.recommendation}</p>}
                   </div>
                   <button onClick={() => setDeleteFindingId(f.id)} className="btn btn-ghost btn-sm" aria-label="Delete finding"><Trash2 size={14} /></button>
                 </li>
@@ -85,7 +85,7 @@ export function SummaryPage() {
             </select>
             <input value={finding} onChange={(e)=> setFinding(e.target.value)} placeholder="Finding..." style={{ height: 34, border: "1px solid var(--border-color)", borderRadius: "var(--radius)", padding: "0 10px", fontSize: 13 }} />
             <span />
-            <input value={recommendation} onChange={(e)=> setRecommendation(e.target.value)} placeholder="Recommendation..." style={{ height: 34, border: "1px solid var(--border-color)", borderRadius: "var(--radius)", padding: "0 10px", fontSize: 13 }} />
+            <textarea value={recommendation} onChange={(e)=> setRecommendation(e.target.value)} placeholder="Recommendation..." rows={3} style={{ minHeight: 68, width: "100%", boxSizing: "border-box", border: "1px solid var(--border-color)", borderRadius: "var(--radius)", padding: "8px 10px", fontSize: 13, fontFamily: "inherit", resize: "vertical" }} />
           </div>
           <div><button onClick={addFinding} className="btn btn-primary">+ Add Finding</button></div>
         </div>
