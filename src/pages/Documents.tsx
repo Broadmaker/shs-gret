@@ -71,17 +71,17 @@ export function DocumentsPage() {
             <div style={{ border: "1px dashed var(--border-color)", borderRadius: "var(--radius)", padding: 16, textAlign: "center", fontSize: 13, color: "var(--text-muted)" }}>No evaluators added yet.</div>
           ) : (
             evaluation.evaluators.map((ev) => (
-              <div key={ev.id} style={{ display: "flex", gap: 8, alignItems: "center", border: "1px solid var(--border-color)", borderRadius: "var(--radius)", padding: 8 }}>
-                <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--text-muted)", width: 20 }}>{ev.order}.</span>
-                <input defaultValue={ev.name} onBlur={(e) => { if (e.target.value !== ev.name) updateEvaluator(ev.id, { name: e.target.value }); }} placeholder="Name" style={{ flex: 1, height: 30, border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", padding: "0 8px", fontSize: 13 }} />
-                <input defaultValue={ev.role} onBlur={(e) => { if (e.target.value !== ev.role) updateEvaluator(ev.id, { role: e.target.value }); }} placeholder="Role (e.g., MEIT Lead)" style={{ flex: 1, height: 30, border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", padding: "0 8px", fontSize: 13 }} />
+              <div key={ev.id} className="evaluator-row" style={{ border: "1px solid var(--border-color)", borderRadius: "var(--radius)", padding: 8 }}>
+                <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--text-muted)", width: 20, flexShrink: 0 }}>{ev.order}.</span>
+                <input defaultValue={ev.name} onBlur={(e) => { if (e.target.value !== ev.name) updateEvaluator(ev.id, { name: e.target.value }); }} placeholder="Name" aria-label="Evaluator name" style={{ flex: 1, height: 30, border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", padding: "0 8px", fontSize: 13 }} />
+                <input defaultValue={ev.role} onBlur={(e) => { if (e.target.value !== ev.role) updateEvaluator(ev.id, { role: e.target.value }); }} placeholder="Role (e.g., MEIT Lead)" aria-label="Evaluator role" style={{ flex: 1, height: 30, border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", padding: "0 8px", fontSize: 13 }} />
                 <button onClick={() => setPendingDeleteId(ev.id)} className="btn btn-ghost btn-sm" aria-label="Remove"><Trash2 size={14} /></button>
               </div>
             ))
           )}
-          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-            <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Evaluator name" style={{ flex: 1, height: 34, border: "1px solid var(--border-color)", borderRadius: "var(--radius)", padding: "0 10px", fontSize: 13 }} />
-            <input value={newRole} onChange={(e) => setNewRole(e.target.value)} placeholder="Role" style={{ flex: 1, height: 34, border: "1px solid var(--border-color)", borderRadius: "var(--radius)", padding: "0 10px", fontSize: 13 }} />
+          <div className="evaluator-add" style={{ marginTop: 4 }}>
+            <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Evaluator name" aria-label="New evaluator name" style={{ flex: 1, height: 34, border: "1px solid var(--border-color)", borderRadius: "var(--radius)", padding: "0 10px", fontSize: 13 }} />
+            <input value={newRole} onChange={(e) => setNewRole(e.target.value)} placeholder="Role" aria-label="New evaluator role" style={{ flex: 1, height: 34, border: "1px solid var(--border-color)", borderRadius: "var(--radius)", padding: "0 10px", fontSize: 13 }} />
             <button onClick={() => { if (!newName.trim()) return; addEvaluator(newName.trim(), newRole.trim() || "Evaluator"); setNewName(""); setNewRole(""); }} className="btn btn-primary"><Plus size={14} /> Add</button>
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 8 }}>

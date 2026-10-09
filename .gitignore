@@ -1,4 +1,4 @@
-# Template — do not track
+# Template ï¿½ do not track
 gentelella-master/
 
 # Deps & build
@@ -6,6 +6,8 @@ node_modules/
 dist/
 dist-ssr/
 *.local
+.wrangler/
+.dev.vars
 
 # Logs
 logs

@@ -21,15 +21,18 @@ export function RatingSelector({
             aria-label={`${r.value} — ${r.label}`}
             title={`${r.value}: ${r.label} — press ${r.value}`}
             onClick={() => onSelect(r.value)}
-            className={`rounded-lg border-2 p-3 text-center transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-1 ${
+            className="rounded-lg border-2 p-3 text-center transition-all focus:outline-none"
+            style={
               active
-                ? "border-[var(--primary)] bg-[var(--primary)] text-white shadow"
-                : "border-[var(--border-color)] bg-white hover:border-[var(--text-muted)] hover:bg-[var(--bg-surface-secondary)]"
-            }`}
+                ? { borderColor: "var(--primary)", background: "var(--primary)", color: "#fff", boxShadow: "0 2px 8px rgba(26,187,156,0.35)" }
+                : { borderColor: "var(--border-color)", background: "var(--bg-surface)", color: "var(--text)" }
+            }
+            onMouseEnter={(e) => { if (!active) { e.currentTarget.style.borderColor = "var(--text-muted)"; e.currentTarget.style.background = "var(--bg-surface-secondary)"; } }}
+            onMouseLeave={(e) => { if (!active) { e.currentTarget.style.borderColor = "var(--border-color)"; e.currentTarget.style.background = "var(--bg-surface)"; } }}
           >
             <span className="block text-2xl font-bold leading-none">{r.value}</span>
-            <span className={`mt-1 block text-[11px] font-semibold tracking-wide ${active ? "text-white/90" : "text-[var(--text-secondary)]"}`}>{r.shortLabel}</span>
-            <span className={`hidden sm:block text-[11px] leading-tight ${active ? "text-white/70" : "text-[var(--text-muted)]"}`}>{r.label}</span>
+            <span className="mt-1 block text-[11px] font-semibold tracking-wide" style={{ color: active ? "rgba(255,255,255,0.92)" : "var(--text-secondary)" }}>{r.shortLabel}</span>
+            <span className="hidden sm:block text-[11px] leading-tight" style={{ color: active ? "rgba(255,255,255,0.72)" : "var(--text-muted)" }}>{r.label}</span>
           </button>
         );
       })}

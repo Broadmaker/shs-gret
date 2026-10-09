@@ -1,6 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import { useEvaluation } from "../hooks/useEvaluation";
+import { evaluationAreas } from "../data/evaluationAreas";
 import { calculateOverall } from "../lib/calculations";
 
 const CONTACT_INFO = [
@@ -11,15 +13,9 @@ const CONTACT_INFO = [
   { icon: "facebook", text: "DepEd Tayo Zamboanga Sibugay Division" },
 ];
 
-// TODO: replace placeholder names/titles with the actual signatories.
-const PLACEHOLDER_EVALUATORS = [
-  { name: "JUAN D. DELA CRUZ", title: "MEIT Member" },
-  { name: "MARIA C. SANTOS", title: "MEIT Member" },
-  { name: "CARLOS M. REYES", title: "MEIT Member" },
-  { name: "LISA F. AQUINO", title: "MEIT Member" },
-];
-const PLACEHOLDER_RECOMMENDING = "JOSE P. RAMOS";
-const PLACEHOLDER_APPROVED = "ANA L. REYES";
+// Real signatories come from the evaluation team; blanks render as empty
+// signature lines so nothing fictitious ever prints.
+const EVALUATOR_SLOTS = [0, 1, 2, 3];
 
 function ContactIcon({ name, className = "w-2 h-2" }: { name: string; className?: string }) {
   const paths: Record<string, React.ReactNode> = {
@@ -92,7 +88,7 @@ function PrintHeader() {
 
 function PrintFooter() {
   return (
-    <footer className="print-footer mt-auto pt-7 print:pt-[2mm] break-inside-avoid">
+    <footer className="print-footer mt-8 print:mt-6 pt-7 print:pt-[2mm] break-inside-avoid">
       <div className="border-t border-neutral-800 mb-3 print:mb-2" />
       <div className="flex items-center h-16 print:h-auto gap-5 print:gap-3">
         <div className="flex items-center gap-2.5 print:gap-1.5 shrink-0">
@@ -147,43 +143,25 @@ function SigBlock({
 export function PrintPage() {
   const { id } = useParams();
   const { evaluation } = useEvaluation(id);
-  const sheetRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-
-  // Shrink-to-fit: measure the body content right before printing and zoom it
-  // down only enough to fit a single A4 page (297mm − 2×8mm margins, minus the
-  // footer which is never zoomed). Covers both the Print button and Ctrl+P via
-  // beforeprint; zoom is reset after printing so the on-screen preview is
-  // unaffected. The footer stays full-size, pinned at the sheet bottom.
-  useEffect(() => {
-    const PAGE_CONTENT_PX = ((297 - 20) * 96) / 25.4 - 2; // 2px safety slack
-    const fitToPage = () => {
-      const sheet = sheetRef.current;
-      const content = contentRef.current;
-      if (!sheet || !content) return;
-      content.style.zoom = "";
-      const footer = sheet.querySelector<HTMLElement>(".print-footer");
-      const avail = PAGE_CONTENT_PX - (footer ? footer.offsetHeight : 0);
-      const h = content.scrollHeight;
-      if (h > avail) content.style.zoom = String(avail / h);
-    };
-    const resetZoom = () => {
-      if (contentRef.current) contentRef.current.style.zoom = "";
-    };
-    window.addEventListener("beforeprint", fitToPage);
-    window.addEventListener("afterprint", resetZoom);
-    return () => {
-      window.removeEventListener("beforeprint", fitToPage);
-      window.removeEventListener("afterprint", resetZoom);
-    };
-  }, []);
+  const [exporting, setExporting] = useState(false);
 
   if (!evaluation) return <p className="p-6 text-sm">Loading…</p>;
   const overall = calculateOverall(evaluation);
+  const remarkGroups = evaluationAreas
+    .map((area) => ({
+      area,
+      entries: area.indicators
+        .filter((ind) => (evaluation.ratings[ind.id]?.remarks ?? "").trim() !== "")
+        .map((ind) => ({ ind, rating: evaluation.ratings[ind.id]?.rating ?? null, remarks: (evaluation.ratings[ind.id]?.remarks ?? "").trim() })),
+    }))
+    .filter((g) => g.entries.length > 0);
   return (
     <div className="mx-auto max-w-[800px] bg-white p-6 print:m-0 print:w-full print:max-w-none print:p-0">
-      <div ref={sheetRef} className="print-sheet font-serif text-neutral-900 px-8 sm:px-12 py-8 sm:py-10 print:px-1 print:py-0 flex flex-col min-h-full">
-        <div ref={contentRef}>
+      <div className="print-sheet font-serif text-neutral-900 px-8 sm:px-12 py-8 sm:py-10 print:px-1 print:py-0">
+      <table className="print-doc">
+        <tbody>
+          <tr>
+            <td>
         <PrintHeader />
 
         <section className="mt-4 print:mt-1.5 grid grid-cols-2 gap-3 print:gap-x-4 print:gap-y-1 text-sm print:text-[11px] font-sans">
@@ -201,7 +179,8 @@ export function PrintPage() {
           <p className="text-sm print:text-[11px] font-semibold">{overall.complianceStatus ?? "INCOMPLETE — finish all indicators"}</p>
         </div>
 
-        <table className="mt-4 print:mt-1.5 w-full text-sm print:text-[10.5px] border border-zinc-300 font-sans">
+        <div className="mt-4 print:mt-1.5" style={{ overflowX: "auto" }}>
+        <table className="print-table w-full text-sm print:text-[10.5px] border border-zinc-300 font-sans" style={{ minWidth: 420 }}>
           <thead className="bg-zinc-100">
             <tr><th className="border px-2 py-1 text-left">Area</th><th className="border px-2 py-1 text-right">Average</th><th className="border px-2 py-1 text-right">Weight</th><th className="border px-2 py-1 text-right">Partial</th></tr>
           </thead>
@@ -212,47 +191,87 @@ export function PrintPage() {
             <tr className="font-bold bg-zinc-50"><td className="border px-2 py-1">Overall</td><td className="border px-2 py-1"></td><td className="border px-2 py-1 text-right">100%</td><td className="border px-2 py-1 text-right">{overall.overallScore!=null? overall.overallScore.toFixed(3):"—"}</td></tr>
           </tbody>
         </table>
+        </div>
 
-        <section className="mt-6 print:mt-2 font-sans">
+        <section className="mt-6 print:mt-3 font-sans avoid-break">
           <h2 className="text-sm print:text-[12px] font-bold border-b border-zinc-900 pb-1 print:pb-0.5">Significant Findings & Recommendations</h2>
           {evaluation.findings.length===0 ? <p className="text-sm print:text-[11px] text-zinc-600 mt-2 print:mt-1">None recorded.</p> : (
-            <ul className="mt-2 print:mt-1 space-y-2 print:space-y-1 text-sm print:text-[11px]">
-              {evaluation.findings.map((f)=> <li key={f.id} className="break-words" style={{ whiteSpace: "pre-wrap" }}><span className="font-semibold">Area {f.areaId}:</span> {f.finding} {f.recommendation && <><br/><span className="font-semibold">Recommendation:</span> {f.recommendation}</>}</li>)}
+            <ul className="mt-2 print:mt-1 space-y-2 print:space-y-1.5 text-sm print:text-[11px]">
+              {evaluation.findings.map((f, i)=> <li key={f.id} className="break-words avoid-break" style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}><span className="font-semibold">#{i + 1} Area {f.areaId}:</span> {f.finding} {f.recommendation && <><br/><span className="font-semibold">Recommendation:</span> {f.recommendation}</>}</li>)}
             </ul>
           )}
         </section>
+
+        {remarkGroups.length > 0 && (
+          <section className="mt-6 print:mt-3 font-sans">
+            <h2 className="text-sm print:text-[12px] font-bold border-b border-zinc-900 pb-1 print:pb-0.5">Indicator Remarks</h2>
+            {remarkGroups.map(({ area, entries }) => (
+              <div key={area.id} className="mt-2 print:mt-1.5 avoid-break-group">
+                <p className="font-semibold text-sm print:text-[11px]">Area {area.id} — {area.title}</p>
+                <ul className="mt-1 space-y-1.5 text-sm print:text-[11px]">
+                  {entries.map(({ ind, rating, remarks }) => (
+                    <li key={ind.id} className="break-words avoid-break" style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
+                      <span className="font-semibold">{ind.id}{rating != null ? ` (${Number.isInteger(rating) ? rating : rating.toFixed(1)})` : ""}:</span> {remarks}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </section>
+        )}
 
         <section className="mt-4 print:mt-2 font-sans break-inside-avoid">
           <h2 className="text-sm print:text-[12px] font-bold border-b border-zinc-900 pb-1 print:pb-0.5">
             Evaluation Team (MEIT)
           </h2>
           <div className="grid grid-cols-2 gap-x-8 print:gap-x-6 gap-y-2 print:gap-y-3 mt-2 print:mt-1">
-            {[0, 1, 2, 3].map((i) => {
+            {EVALUATOR_SLOTS.map((i) => {
               const ev = evaluation.evaluators[i];
-              const ph = PLACEHOLDER_EVALUATORS[i];
               return (
                 <SigBlock
                   key={i}
                   label={`Evaluator ${i + 1}`}
-                  name={ev?.name || ph.name}
-                  title={ev?.role || ph.title}
+                  name={ev?.name || "___________________________"}
+                  title={ev?.role || "MEIT Member — signature over printed name"}
                 />
               );
             })}
           </div>
-          <div className="grid grid-cols-2 gap-x-8 print:gap-x-6 mt-4 print:mt-3">
-            <SigBlock label="Recommending Approval" name={PLACEHOLDER_RECOMMENDING} title="RO QAD Chief" />
-            <SigBlock label="Approved" name={PLACEHOLDER_APPROVED} title="Regional Director" />
+          <div className="grid grid-cols-2 gap-x-8 print:gap-x-6 mt-4 print:mt-3 avoid-break">
+            <SigBlock label="Recommending Approval" name="___________________________" title="RO QAD Chief — signature over printed name" />
+            <SigBlock label="Approved" name="___________________________" title="Regional Director — signature over printed name" />
           </div>
         </section>
-        </div>
-
-        <PrintFooter />
+            </td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            {/* Spacer reserving the pinned footer's space on every page. */}
+            <td aria-hidden="true"><div style={{ height: "26mm" }} /></td>
+          </tr>
+        </tfoot>
+      </table>
+      <PrintFooter />
       </div>
 
-      <div className="no-print mt-6 flex gap-2">
-        <button onClick={() => window.print()} className="rounded-lg bg-zinc-900 px-4 py-2 text-sm text-white">Print / Save PDF</button>
+      <div className="no-print mt-6 flex gap-2" style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+        <button
+          onClick={() => {
+            if (!evaluation || exporting) return;
+            setExporting(true);
+            void import("../lib/exportPdf")
+              .then(({ exportEvaluationPdf }) => exportEvaluationPdf(evaluation))
+              .finally(() => setExporting(false));
+          }}
+          disabled={exporting}
+          className="rounded-lg bg-zinc-900 px-4 py-2 text-sm text-white"
+          style={exporting ? { opacity: 0.75, display: "inline-flex", alignItems: "center", gap: 6 } : { display: "inline-flex", alignItems: "center", gap: 6 }}
+        >
+          {exporting ? <><Loader2 size={14} className="animate-spin" /> Exporting…</> : "Export PDF"}
+        </button>
         <button onClick={() => window.history.back()} className="rounded-lg border border-zinc-200 px-4 py-2 text-sm">Back</button>
+        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Downloads the official report as a PDF file — footer and page numbers on every page.</span>
       </div>
     </div>
   );

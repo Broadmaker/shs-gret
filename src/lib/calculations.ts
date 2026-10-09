@@ -111,7 +111,8 @@ export function calculateOverall(evaluation: Evaluation): OverallResult {
   };
 }
 
-// Strict validation — NEVER treat missing as 0
+// Strict validation — Rating ∈ {1,2,3,4}. Missing ratings stay null
+// and are NEVER treated as 0 (blueprint §42).
 export function isValidRating(v: unknown): v is RatingValue {
   return v === 1 || v === 2 || v === 3 || v === 4;
 }

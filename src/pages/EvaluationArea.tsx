@@ -3,8 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { evaluationAreas } from "../data/evaluationAreas";
 import { useEvaluation } from "../hooks/useEvaluation";
 import { IndicatorCard } from "../components/evaluation/IndicatorCard";
-import { Progress } from "../components/ui/Progress";
-import { ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, LayoutDashboard, BarChart3 } from "lucide-react";
 import { calculateAreaResult } from "../lib/calculations";
 
 export function EvaluationAreaPage() {
@@ -39,38 +38,56 @@ export function EvaluationAreaPage() {
   const ind = area.indicators[idx];
   const rec = evaluation.ratings[ind.id];
   const areaResult = calculateAreaResult(area.id, evaluation.ratings);
+  const areaPct = areaResult.totalIndicators ? Math.round((areaResult.ratedCount / areaResult.totalIndicators) * 100) : 0;
 
   return (
     <div style={{ maxWidth: 860, margin: "0 auto", display: "flex", flexDirection: "column", gap: 16 }}>
-      {/* Area header — gentelella page-header + progress */}
-      <div className="card" style={{ overflow: "hidden", borderInlineStart: areaResult.isComplete ? "4px solid var(--green)" : "4px solid var(--primary)" }}>
-        <div className="card-header" style={{ background: areaResult.isComplete ? "var(--green-lt)" : "var(--bg-surface)" }}>
-          <div>
-            <div className="card-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              {areaResult.isComplete && <CheckCircle2 size={14} style={{ color: "var(--green)" }} />} {area.id}. {area.title}
-              <span className={`status ${areaResult.isComplete ? "status-green" : "status-yellow"}`} style={{ marginLeft: 6, fontSize: 11 }}>{areaResult.ratedCount}/{areaResult.totalIndicators} • {(area.weight*100).toFixed(0)}%</span>
+      {/* Area banner */}
+      <section className="result-banner area-banner" aria-label={`Area ${area.id} progress`}>
+        <div className="rb-main">
+          <span className="rb-eyebrow">Area {area.id} • Weight {(area.weight * 100).toFixed(0)}% • {evaluation.school.name || "Untitled School"}</span>
+          <h1 className="rb-school">{area.title}</h1>
+          <p className="rb-meta">
+            {areaResult.isComplete ? areaResult.descriptor ?? "Complete" : "Rate each indicator 1–4 • keys 1-4, N/P to move"}
+            {" • Autosaved "}{new Date(evaluation.updatedAt).toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit" })}
+          </p>
+          <div className="rb-progress-row">
+            <div className="rb-progress-labels">
+              <span>{areaResult.ratedCount}/{areaResult.totalIndicators} indicators rated</span>
+              <span>{areaPct}%</span>
             </div>
-            <div className="card-subtitle">{areaResult.descriptor ?? "Rate each indicator 1–4 • N/P or click pills to navigate"}</div>
-          </div>
-          <div style={{ display: "flex", gap: 6 }}>
-            <Link to={`/evaluations/${id}`} className="btn btn-outline btn-sm">Dashboard</Link>
-            <Link to={`/evaluations/${id}/summary`} className="btn btn-primary btn-sm">Summary</Link>
+            <div className="rb-track" role="progressbar" aria-valuenow={areaPct} aria-valuemin={0} aria-valuemax={100} aria-label="Area progress">
+              <div className="fill" style={{ width: `${areaPct}%` }} />
+            </div>
           </div>
         </div>
-        <div style={{ padding: "10px 16px" }}><Progress value={(areaResult.ratedCount/areaResult.totalIndicators)*100} /></div>
-      </div>
+        <div className="rb-divider" aria-hidden="true" />
+        <div className="rb-score">
+          <div>
+            <div className="rb-score-value">{areaResult.average != null ? areaResult.average.toFixed(2) : "—"}</div>
+            <div className="rb-score-label">Area Average</div>
+            {areaResult.partialProduct != null && (
+              <div style={{ marginTop: 4, fontSize: 11, color: "rgba(255,255,255,0.6)", fontVariantNumeric: "tabular-nums" }}>Partial {areaResult.partialProduct.toFixed(3)}</div>
+            )}
+          </div>
+        </div>
+        <div className="rb-actions">
+          <Link to={`/evaluations/${id}`} className="rb-btn-ghost"><LayoutDashboard size={13} /> Dashboard</Link>
+          <Link to={`/evaluations/${id}/summary`} className="rb-btn-primary"><BarChart3 size={13} /> Summary</Link>
+        </div>
+      </section>
 
-      {/* Top pills — gentelella tabs-pill + stepper hybrid */}
-      <div className="card" style={{ padding: 12, borderInlineStart: areaResult.isComplete ? "4px solid var(--green)" : "4px solid var(--border-color)" }}>
+      {/* Indicator navigator — unboxed strip */}
+      <section aria-label="Indicator navigator" style={{ padding: "2px 4px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: areaResult.isComplete ? "var(--green)" : "var(--primary)", display: "inline-block" }} /> Indicators
+          <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 7 }}>
+            <span style={{ width: 7, height: 7, borderRadius: "50%", background: areaResult.isComplete ? "var(--green)" : "var(--primary)", display: "inline-block" }} /> Indicators
           </span>
-          <span style={{ fontSize: 11, fontWeight: 500, color: areaResult.isComplete ? "var(--green)" : "var(--text-muted)", background: areaResult.isComplete ? "var(--green-lt)" : "var(--bg-surface-secondary)", border: `1px solid ${areaResult.isComplete ? "rgba(47,179,68,0.2)" : "var(--border-color-light)"}`, borderRadius: 999, padding: "2px 8px" }}>
-            {String(idx+1).padStart(2,"0")} / {String(area.indicators.length).padStart(2,"0")}{areaResult.isComplete ? " • Complete" : ""}
+          <span style={{ fontSize: 11.5, fontWeight: 600, color: areaResult.isComplete ? "var(--green)" : "var(--text-muted)", background: areaResult.isComplete ? "var(--green-lt)" : "var(--bg-surface)", border: `1px solid ${areaResult.isComplete ? "rgba(47,179,68,0.25)" : "var(--border-color)"}`, borderRadius: 999, padding: "3px 10px" }} className="tnum">
+            {String(idx + 1).padStart(2, "0")} / {String(area.indicators.length).padStart(2, "0")}{areaResult.isComplete ? " • Complete" : ""}
           </span>
         </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+        <div className="nav-pills">
           {area.indicators.map((it, i) => {
             const rated = evaluation.ratings[it.id]?.rating != null;
             const active = i === idx;
@@ -79,22 +96,16 @@ export function EvaluationAreaPage() {
               <button
                 key={it.id}
                 onClick={() => setIdx(i)}
-                style={{
-                  minWidth: 42, height: 30, padding: "0 8px", borderRadius: "var(--radius-sm)", fontSize: 12, fontWeight: active ? 700 : rated ? 600 : 500,
-                  border: active ? "1px solid var(--primary)" : rated ? "1px solid rgba(47,179,68,0.25)" : "1px solid var(--border-color-light)",
-                  background: active ? "var(--primary)" : rated ? "var(--green-lt)" : "var(--bg-surface)",
-                  color: active ? "#fff" : rated ? "var(--green)" : "var(--text-muted)",
-                  boxShadow: active ? "0 2px 6px rgba(26,187,156,0.25)" : "none",
-                  cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 4, transition: "all 120ms",
-                }}
+                className={`nav-pill${rated ? " rated" : ""}${active ? " active" : ""}`}
+                aria-current={active ? "true" : undefined}
                 title={rated ? `Rated ${r} — ${it.id}` : `${it.id} — Not yet rated`}
               >
-                {String(i+1).padStart(2,"0")}{rated ? ` ✓` : ""}
+                {String(i + 1).padStart(2, "0")}{rated ? ` ✓` : ""}
               </button>
             );
           })}
         </div>
-      </div>
+      </section>
 
       <IndicatorCard
         indicator={ind}
@@ -113,10 +124,12 @@ export function EvaluationAreaPage() {
           setMovCheckedBulk(ind.id, keys, checked);
         }}
       />
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-        <button disabled={idx===0} onClick={() => setIdx((i)=> i-1)} className="btn btn-outline btn-sm"><ChevronLeft size={14}/> Previous (P)</button>
-        <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{idx+1} / {area.indicators.length} • Keys 1-4 to rate, N/P to navigate</span>
-        <button disabled={idx===area.indicators.length-1} onClick={() => setIdx((i)=> i+1)} className="btn btn-outline btn-sm">Next (N) <ChevronRight size={14}/></button>
+      <div className="pager-wrap">
+        <div className="pager" role="navigation" aria-label="Indicator pagination">
+          <button disabled={idx === 0} onClick={() => setIdx((i) => i - 1)} className="pager-btn" aria-label="Previous indicator"><ChevronLeft size={15} /> Prev</button>
+          <span className="pager-count">{String(idx + 1).padStart(2, "0")} / {String(area.indicators.length).padStart(2, "0")}</span>
+          <button disabled={idx === area.indicators.length - 1} onClick={() => setIdx((i) => i + 1)} className="pager-btn primary" aria-label="Next indicator">Next <ChevronRight size={15} /></button>
+        </div>
       </div>
     </div>
   );

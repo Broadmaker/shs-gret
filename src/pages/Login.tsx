@@ -1,19 +1,21 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { login, getAuthUser } from "../lib/auth";
-import { GraduationCap, Mail, Lock } from "lucide-react";
+import { GraduationCap, Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 export function LoginPage() {
   const nav = useNavigate();
   const existing = getAuthUser();
   const [email, setEmail] = useState(existing?.email ?? "");
-  const [password, setPassword] = useState("");
   const [name, setName] = useState(existing?.name ?? "");
+  const [showPw, setShowPw] = useState(false);
+  const [error, setError] = useState("");
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) return;
-    // Password is mock — not validated for MVP (offline-first)
+    if (!email.trim()) { setError("Enter your DepEd email to continue."); return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) { setError("That email doesn't look valid — check for typos."); return; }
+    setError("");
     login(email, name);
     nav("/");
   };
@@ -27,14 +29,14 @@ export function LoginPage() {
         </div>
 
         <div className="auth-title">Welcome back</div>
-        <div className="auth-subtitle">Sign in to continue your DepEd SHS evaluation. Offline-first — no server required for MVP.</div>
+        <div className="auth-subtitle">Sign in to continue your SHS government recognition evaluation. Work offline — progress saves on this device.</div>
 
-        <form onSubmit={submit}>
+        <form onSubmit={submit} noValidate>
           <div className="form-group">
             <label className="form-label" htmlFor="name">Display name</label>
             <div className="input-group">
               <GraduationCap className="input-icon" />
-              <input id="name" className="form-control" placeholder="e.g., Juan Dela Cruz" value={name} onChange={(e) => setName(e.target.value)} />
+              <input id="name" className="form-control" placeholder="e.g., Juan Dela Cruz" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
             </div>
           </div>
 
@@ -42,44 +44,42 @@ export function LoginPage() {
             <label className="form-label" htmlFor="email">Email</label>
             <div className="input-group">
               <Mail className="input-icon" />
-              <input id="email" type="email" className="form-control" placeholder="you@deped.gov.ph" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <input id="email" type="email" className="form-control" placeholder="you@deped.gov.ph" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
             </div>
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="password">Password</label>
+            <label className="form-label" htmlFor="password">Password <span style={{ fontWeight: 400, color: "var(--text-muted)" }}>(local only)</span></label>
             <div className="input-group">
               <Lock className="input-icon" />
-              <input id="password" type="password" className="form-control" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
+              <input id="password" type={showPw ? "text" : "password"} className="form-control" placeholder="••••••••" autoComplete="current-password" style={{ paddingInlineEnd: 36 }} />
+              <button type="button" onClick={() => setShowPw((v) => !v)} aria-label={showPw ? "Hide password" : "Show password"} style={{ position: "absolute", insetInlineEnd: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", display: "flex" }}>
+                {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
+              </button>
             </div>
-            <p style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>MVP mock — any password works. Stored locally only.</p>
+            <p style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>Local session for this device — credentials never leave your browser in this version.</p>
           </div>
+
+          {error && <p role="alert" style={{ fontSize: 12.5, color: "var(--red)", background: "var(--red-lt)", border: "1px solid rgba(214,57,57,0.25)", borderRadius: "var(--radius)", padding: "8px 10px", marginBottom: 12 }}>{error}</p>}
 
           <button type="submit" className="btn btn-primary" style={{ width: "100%", justifyContent: "center", height: 38, marginTop: 4 }}>
             Sign in
           </button>
         </form>
 
-        <div className="auth-actions">
-          <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--text-secondary)" }}>
-            <input type="checkbox" defaultChecked style={{ accentColor: "var(--primary)" }} /> Remember me
-          </label>
-          <Link to="/login" onClick={(e) => e.preventDefault()}>Forgot password?</Link>
-        </div>
-
         <div className="auth-divider">or</div>
 
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={() => { login("guest@local", "Guest"); nav("/"); }} className="btn btn-outline" style={{ flex: 1, justifyContent: "center" }}>Continue as guest</button>
-          <button onClick={() => { login(email || "guest@local", name || "Guest"); nav("/"); }} className="btn btn-ghost" style={{ flex: 1, justifyContent: "center" }}>
-            Demo login
+          <button onClick={() => { login(email.trim() || "demo.evaluator@deped.gov.ph", name.trim() || "Demo Evaluator"); nav("/"); }} className="btn btn-ghost" style={{ flex: 1, justifyContent: "center" }}>
+            Try demo login
           </button>
         </div>
 
         <div className="auth-footer">
-          DepEd SHS Government Recognition • <Link to="/">Back to evaluations</Link>
+          SHS Government Recognition • <Link to="/">Back to evaluations</Link>
           <br />
-          <span style={{ fontSize: 11, color: "var(--text-muted)" }}>Gentelella v4 • Teal #1ABB9C • Secure local session</span>
+          <span style={{ fontSize: 11, color: "var(--text-muted)" }}>Schools Division of Zamboanga Sibugay • Secure local session</span>
         </div>
       </div>
     </div>

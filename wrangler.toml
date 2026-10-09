@@ -1,0 +1,18 @@
+# SHS Evaluation Tool — Cloudflare Worker API (D1)
+# 1) pnpm exec wrangler login
+# 2) Put your D1 database_id below (or run: pnpm exec wrangler d1 list)
+# 3) pnpm run db:migrate:local  (dev) / pnpm run db:migrate:remote (prod)
+# 4) pnpm run worker:dev  → API at http://localhost:8787/api/...
+
+name = "shs-evaluation-api"
+main = "worker/index.ts"
+compatibility_date = "2025-01-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "shs-evaluation-db"
+database_id = "912805a5-3fdd-4e95-bcf7-f73cb47344a1"
+migrations_dir = "migrations"
+
+# Optional shared secret: pnpm exec wrangler secret put API_TOKEN
+# Client sends it via VITE_API_TOKEN. Leave unset for open dev API.
